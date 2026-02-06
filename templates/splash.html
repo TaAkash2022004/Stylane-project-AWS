@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - StyleLane{% endblock %}
+
+{% block content %}
+<div class="splash-container">
+    <div class="splash-content">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="StyleLane Logo" class="splash-logo">
+        </div>
+        <h1 class="splash-title">StyleLane</h1>
+        <p class="splash-subtitle">Cloud Based Inventory Management System for Fashion</p>
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    setTimeout(function() {
+        window.location.href = "{{ url_for('login') }}";
+    }, 4000);
+</script>
+{% endblock %}

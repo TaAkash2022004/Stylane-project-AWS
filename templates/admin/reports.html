@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - StyleLane{% endblock %}
+
+{% block nav_links %}
+    <a href="{{ url_for('admin_dashboard') }}" class="nav-link">Dashboard</a>
+    <a href="{{ url_for('admin_users') }}" class="nav-link">Users</a>
+    <a href="{{ url_for('admin_stores') }}" class="nav-link">Stores</a>
+    <a href="{{ url_for('admin_inventory') }}" class="nav-link">Inventory</a>
+    <a href="{{ url_for('admin_reports') }}" class="nav-link active">Reports</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Reports & Analytics</h2>
+</div>
+
+<div class="reports-grid">
+    <div class="report-section">
+        <h3>Sales by Store</h3>
+        {% if sales_by_store %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Store</th>
+                            <th>Total Sales</th>
+                            <th>Transactions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for store_name, total_sales, transaction_count in sales_by_store %}
+                        <tr>
+                            <td>{{ store_name }}</td>
+                            <td>${{ "%.2f"|format(total_sales) }}</td>
+                            <td>{{ transaction_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="no-data">No sales data available.</p>
+        {% endif %}
+    </div>
+
+    <div class="report-section">
+        <h3>Low Stock by Store</h3>
+        {% if low_stock_by_store %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Store</th>
+                            <th>Low Stock Items</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for store_name, low_stock_count in low_stock_by_store %}
+                        <tr>
+                            <td>{{ store_name }}</td>
+                            <td>{{ low_stock_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="no-data">No low stock items.</p>
+        {% endif %}
+    </div>
+
+    <div class="report-section">
+        <h3>Top Selling Products</h3>
+        {% if top_products %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>SKU</th>
+                            <th>Units Sold</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for name, sku, total_sold, revenue in top_products %}
+                        <tr>
+                            <td>{{ name }}</td>
+                            <td>{{ sku }}</td>
+                            <td>{{ total_sold }}</td>
+                            <td>${{ "%.2f"|format(revenue) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="no-data">No sales data available.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

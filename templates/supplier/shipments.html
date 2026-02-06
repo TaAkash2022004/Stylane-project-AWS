@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Shipments - StyleLane{% endblock %}
+
+{% block nav_links %}
+    <a href="{{ url_for('supplier_dashboard') }}" class="nav-link">Dashboard</a>
+    <a href="{{ url_for('supplier_restock_requests') }}" class="nav-link">Restock Requests</a>
+    <a href="{{ url_for('supplier_shipments') }}" class="nav-link active">Shipments</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Shipments</h2>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Shipment ID</th>
+                <th>Request ID</th>
+                <th>Store</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Tracking Number</th>
+                <th>Status</th>
+                <th>Shipped Date</th>
+                <th>Expected Delivery</th>
+                <th>Actual Delivery</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for shipment in shipments %}
+            <tr>
+                <td>{{ shipment.id }}</td>
+                <td>{{ shipment.restock_request_id }}</td>
+                <td>{{ shipment.store.name if shipment.store else 'N/A' }}</td>
+                <td>{{ shipment.product.name if shipment.product else 'N/A' }}</td>
+                <td>{{ shipment.restock_request.requested_quantity if shipment.restock_request else 'N/A' }}</td>
+                <td>{{ shipment.tracking_number or 'N/A' }}</td>
+                <td>
+                    {% if shipment.status == 'preparing' %}
+                        <span class="badge badge-warning">Preparing</span>
+                    {% elif shipment.status == 'shipped' %}
+                        <span class="badge badge-info">Shipped</span>
+                    {% elif shipment.status == 'delivered' %}
+                        <span class="badge badge-success">Delivered</span>
+                    {% elif shipment.status == 'cancelled' %}
+                        <span class="badge badge-danger">Cancelled</span>
+                    {% endif %}
+                </td>
+                <td>{{ shipment.shipped_date|datetime if shipment.shipped_date else 'N/A' }}</td>
+                <td>{{ shipment.expected_delivery_date|datetime if shipment.expected_delivery_date else 'N/A' }}</td>
+                <td>{{ shipment.actual_delivery_date|datetime if shipment.actual_delivery_date else 'N/A' }}</td>
+                <td>
+                    <button class="btn btn-sm btn-secondary" onclick="openUpdateModal('{{ shipment.id }}', '{{ shipment.status }}', '{{ shipment.tracking_number or '' }}', '{{ shipment.notes or '' }}')">Update Status</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Update Status Modal -->
+<div id="updateModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleModal('updateModal')">&times;</span>
+        <h3>Update Shipment Status</h3>
+        <form method="POST" id="updateForm">
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status" required>
+                    <option value="preparing">Preparing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="tracking_number">Tracking Number</label>
+                <input type="text" id="tracking_number" name="tracking_number">
+            </div>
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Status</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openUpdateModal(shipmentId, status, trackingNumber, notes) {
+    document.getElementById('updateForm').action = `/supplier/shipments/${shipmentId}/update-status`;
+    document.getElementById('status').value = status;
+    document.getElementById('tracking_number').value = trackingNumber;
+    document.getElementById('notes').value = notes;
+    toggleModal('updateModal');
+}
+</script>
+{% endblock %}

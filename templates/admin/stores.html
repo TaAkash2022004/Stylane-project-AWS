@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Stores - StyleLane{% endblock %}
+
+{% block nav_links %}
+    <a href="{{ url_for('admin_dashboard') }}" class="nav-link">Dashboard</a>
+    <a href="{{ url_for('admin_users') }}" class="nav-link">Users</a>
+    <a href="{{ url_for('admin_stores') }}" class="nav-link active">Stores</a>
+    <a href="{{ url_for('admin_inventory') }}" class="nav-link">Inventory</a>
+    <a href="{{ url_for('admin_reports') }}" class="nav-link">Reports</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Manage Stores</h2>
+    <button class="btn btn-primary" onclick="toggleModal('createStoreModal')">Create New Store</button>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Phone</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for store in stores %}
+            <tr>
+                <td>{{ store.id }}</td>
+                <td>{{ store.name }}</td>
+                <td>{{ store.address }}</td>
+                <td>{{ store.phone or 'N/A' }}</td>
+                <td>{{ store.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    <button class="btn btn-sm btn-secondary" onclick="openEditStoreModal({{ store.id }}, '{{ store.name }}', '{{ store.address }}', '{{ store.phone or '' }}')">Edit</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Create Store Modal -->
+<div id="createStoreModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleModal('createStoreModal')">&times;</span>
+        <h3>Create New Store</h3>
+        <form method="POST" action="{{ url_for('admin_create_store') }}">
+            <div class="form-group">
+                <label for="name">Store Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="address">Address</label>
+                <textarea id="address" name="address" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="text" id="phone" name="phone">
+            </div>
+            <button type="submit" class="btn btn-primary">Create Store</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Store Modal -->
+<div id="editStoreModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleModal('editStoreModal')">&times;</span>
+        <h3>Edit Store</h3>
+        <form method="POST" id="editStoreForm">
+            <div class="form-group">
+                <label for="edit_name">Store Name</label>
+                <input type="text" id="edit_name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="edit_address">Address</label>
+                <textarea id="edit_address" name="address" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="edit_phone">Phone</label>
+                <input type="text" id="edit_phone" name="phone">
+            </div>
+            <button type="submit" class="btn btn-primary">Update Store</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditStoreModal(id, name, address, phone) {
+    document.getElementById('editStoreForm').action = `/admin/stores/${id}/update`;
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_address').value = address;
+    document.getElementById('edit_phone').value = phone;
+    toggleModal('editStoreModal');
+}
+</script>
+{% endblock %}

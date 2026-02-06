@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Products - StyleLane{% endblock %}
+
+{% block nav_links %}
+<a href="{{ url_for('store_manager_dashboard') }}" class="nav-link">Dashboard</a>
+<a href="{{ url_for('store_manager_products') }}" class="nav-link active">Products</a>
+<a href="{{ url_for('store_manager_sales') }}" class="nav-link">Sales</a>
+<a href="{{ url_for('store_manager_restock_requests') }}" class="nav-link">Restock Requests</a>
+<a href="{{ url_for('store_manager_reports') }}" class="nav-link">Reports</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Manage Products - {{ store.name }}</h2>
+    <button class="btn btn-primary" onclick="toggleModal('createProductModal')">Add New Product</button>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Product Name</th>
+                <th>SKU</th>
+                <th>Category</th>
+                <th>Size</th>
+                <th>Color</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Threshold</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>
+                    {% if product.image_filename %}
+                    <img src="{{ url_for('static', filename='uploads/products/' + product.image_filename) }}"
+                        alt="{{ product.name }}" style="width: 50px; height: 50px; object-fit: cover;">
+                    {% else %}
+                    <span style="color: #ccc;">No Image</span>
+                    {% endif %}
+                </td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.sku }}</td>
+                <td>{{ product.category or 'N/A' }}</td>
+                <td>{{ product.size or 'N/A' }}</td>
+                <td>{{ product.color or 'N/A' }}</td>
+                <td>${{ "%.2f"|format(product.price) }}</td>
+                <td>{{ product.stock_quantity }}</td>
+                <td>{{ product.low_stock_threshold }}</td>
+                <td>
+                    {% if product.stock_quantity == 0 %}
+                    <span class="badge badge-danger">Out of Stock</span>
+                    {% elif product.is_low_stock %}
+                    <span class="badge badge-warning">Low Stock</span>
+                    {% else %}
+                    <span class="badge badge-success">In Stock</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-secondary"
+                        onclick="openEditProductModal({{ product.id }}, '{{ product.name }}', '{{ product.description or '' }}', '{{ product.category or '' }}', '{{ product.size or '' }}', '{{ product.color or '' }}', '{{ product.sku }}', {{ product.price }}, {{ product.stock_quantity }}, {{ product.low_stock_threshold }})">Edit</button>
+                    <form method="POST" action="{{ url_for('store_manager_delete_product', product_id=product.id) }}"
+                        style="display: inline;"
+                        onsubmit="return confirm('Are you sure you want to delete this product?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Create Product Modal -->
+<div id="createProductModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleModal('createProductModal')">&times;</span>
+        <h3>Add New Product</h3>
+        <form method="POST" action="{{ url_for('store_manager_create_product') }}" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="image">Product Image</label>
+                <input type="file" id="image" name="image" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label for="name">Product Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <input type="text" id="category" name="category" placeholder="e.g., Shirts, Pants">
+                </div>
+                <div class="form-group">
+                    <label for="size">Size</label>
+                    <input type="text" id="size" name="size" placeholder="e.g., S, M, L">
+                </div>
+                <div class="form-group">
+                    <label for="color">Color</label>
+                    <input type="text" id="color" name="color">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="sku">SKU</label>
+                <input type="text" id="sku" name="sku" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="price">Price</label>
+                    <input type="number" step="0.01" id="price" name="price" required>
+                </div>
+                <div class="form-group">
+                    <label for="stock_quantity">Stock Quantity</label>
+                    <input type="number" id="stock_quantity" name="stock_quantity" value="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="low_stock_threshold">Low Stock Threshold</label>
+                    <input type="number" id="low_stock_threshold" name="low_stock_threshold" value="10" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Product</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div id="editProductModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleModal('editProductModal')">&times;</span>
+        <h3>Edit Product</h3>
+        <form method="POST" id="editProductForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="edit_image">Update Image</label>
+                <input type="file" id="edit_image" name="image" accept="image/*">
+                <small class="form-text">Leave blank to keep current image</small>
+            </div>
+            <div class="form-group">
+                <label for="edit_name">Product Name</label>
+                <input type="text" id="edit_name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="edit_description">Description</label>
+                <textarea id="edit_description" name="description"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit_category">Category</label>
+                    <input type="text" id="edit_category" name="category">
+                </div>
+                <div class="form-group">
+                    <label for="edit_size">Size</label>
+                    <input type="text" id="edit_size" name="size">
+                </div>
+                <div class="form-group">
+                    <label for="edit_color">Color</label>
+                    <input type="text" id="edit_color" name="color">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edit_sku">SKU</label>
+                <input type="text" id="edit_sku" name="sku" required readonly>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit_price">Price</label>
+                    <input type="number" step="0.01" id="edit_price" name="price" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_stock_quantity">Stock Quantity</label>
+                    <input type="number" id="edit_stock_quantity" name="stock_quantity" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_low_stock_threshold">Low Stock Threshold</label>
+                    <input type="number" id="edit_low_stock_threshold" name="low_stock_threshold" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Product</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openEditProductModal(id, name, description, category, size, color, sku, price, stockQuantity, threshold) {
+        document.getElementById('editProductForm').action = `/store-manager/products/${id}/update`;
+        document.getElementById('edit_name').value = name;
+        document.getElementById('edit_description').value = description || '';
+        document.getElementById('edit_category').value = category || '';
+        document.getElementById('edit_size').value = size || '';
+        document.getElementById('edit_color').value = color || '';
+        document.getElementById('edit_sku').value = sku;
+        document.getElementById('edit_price').value = price;
+        document.getElementById('edit_stock_quantity').value = stockQuantity;
+        document.getElementById('edit_low_stock_threshold').value = threshold;
+        toggleModal('editProductModal');
+    }
+</script>
+{% endblock %}

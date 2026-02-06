@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - StyleLane{% endblock %}
+
+{% block nav_links %}
+    <a href="{{ url_for('store_manager_dashboard') }}" class="nav-link">Dashboard</a>
+    <a href="{{ url_for('store_manager_products') }}" class="nav-link">Products</a>
+    <a href="{{ url_for('store_manager_sales') }}" class="nav-link">Sales</a>
+    <a href="{{ url_for('store_manager_restock_requests') }}" class="nav-link">Restock Requests</a>
+    <a href="{{ url_for('store_manager_reports') }}" class="nav-link active">Reports</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Reports - {{ store.name }}</h2>
+</div>
+
+<div class="reports-grid">
+    <div class="report-section">
+        <h3>Sales Summary</h3>
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3>${{ "%.2f"|format(total_sales) }}</h3>
+                <p>Total Sales</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3>{{ total_transactions }}</h3>
+                <p>Total Transactions</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="report-section">
+        <h3>Low Stock Products</h3>
+        {% if low_stock_products %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>SKU</th>
+                            <th>Stock</th>
+                            <th>Threshold</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in low_stock_products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.sku }}</td>
+                            <td>{{ product.stock_quantity }}</td>
+                            <td>{{ product.low_stock_threshold }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="no-data">No low stock products.</p>
+        {% endif %}
+    </div>
+
+    <div class="report-section">
+        <h3>Top Selling Products</h3>
+        {% if top_products %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Units Sold</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for name, total_sold, revenue in top_products %}
+                        <tr>
+                            <td>{{ name }}</td>
+                            <td>{{ total_sold }}</td>
+                            <td>${{ "%.2f"|format(revenue) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="no-data">No sales data available.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

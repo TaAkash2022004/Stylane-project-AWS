@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Store Manager Dashboard - StyleLane{% endblock %}
+
+{% block nav_links %}
+    <a href="{{ url_for('store_manager_dashboard') }}" class="nav-link active">Dashboard</a>
+    <a href="{{ url_for('store_manager_products') }}" class="nav-link">Products</a>
+    <a href="{{ url_for('store_manager_sales') }}" class="nav-link">Sales</a>
+    <a href="{{ url_for('store_manager_restock_requests') }}" class="nav-link">Restock Requests</a>
+    <a href="{{ url_for('store_manager_reports') }}" class="nav-link">Reports</a>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h2>{{ store.name }} - Dashboard</h2>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📦</div>
+            <div class="stat-info">
+                <h3>{{ products|length }}</h3>
+                <p>Total Products</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-info">
+                <h3>{{ low_stock_count }}</h3>
+                <p>Low Stock Items</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-info">
+                <h3>{{ pending_requests }}</h3>
+                <p>Pending Requests</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-sections">
+        <div class="dashboard-section">
+            <h3>Low Stock Products</h3>
+            {% if low_stock_products %}
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>SKU</th>
+                                <th>Stock</th>
+                                <th>Threshold</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in low_stock_products[:10] %}
+                            <tr>
+                                <td>{{ product.name }}</td>
+                                <td>{{ product.sku }}</td>
+                                <td>{{ product.stock_quantity }}</td>
+                                <td>{{ product.low_stock_threshold }}</td>
+                                <td><span class="badge badge-warning">Low Stock</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="no-data">No low stock products at this time.</p>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-section">
+            <h3>Recent Sales</h3>
+            {% if recent_sales %}
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td>{{ sale.product.name if sale.product else 'N/A' }}</td>
+                                <td>{{ sale.quantity }}</td>
+                                <td>${{ "%.2f"|format(sale.total_amount) }}</td>
+                                <td>{{ sale.sale_date|datetime }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="no-data">No recent sales.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Restock Requests - StyleLane{% endblock %}
+
+{% block nav_links %}
+    <a href="{{ url_for('supplier_dashboard') }}" class="nav-link">Dashboard</a>
+    <a href="{{ url_for('supplier_restock_requests') }}" class="nav-link active">Restock Requests</a>
+    <a href="{{ url_for('supplier_shipments') }}" class="nav-link">Shipments</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Restock Requests</h2>
+    <div class="filter-buttons">
+        <a href="{{ url_for('supplier_restock_requests', status='all') }}" class="btn btn-sm {% if status_filter == 'all' %}btn-primary{% else %}btn-secondary{% endif %}">All</a>
+        <a href="{{ url_for('supplier_restock_requests', status='pending') }}" class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-secondary{% endif %}">Pending</a>
+        <a href="{{ url_for('supplier_restock_requests', status='approved') }}" class="btn btn-sm {% if status_filter == 'approved' %}btn-primary{% else %}btn-secondary{% endif %}">Approved</a>
+        <a href="{{ url_for('supplier_restock_requests', status='shipped') }}" class="btn btn-sm {% if status_filter == 'shipped' %}btn-primary{% else %}btn-secondary{% endif %}">Shipped</a>
+        <a href="{{ url_for('supplier_restock_requests', status='rejected') }}" class="btn btn-sm {% if status_filter == 'rejected' %}btn-primary{% else %}btn-secondary{% endif %}">Rejected</a>
+    </div>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Request ID</th>
+                <th>Store</th>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Requested Quantity</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Notes</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in requests %}
+            <tr>
+                <td>{{ request.id }}</td>
+                <td>{{ request.store.name if request.store else 'N/A' }}</td>
+                <td>{{ request.product.name if request.product else 'N/A' }}</td>
+                <td>{{ request.product.sku if request.product else 'N/A' }}</td>
+                <td>{{ request.requested_quantity }}</td>
+                <td>
+                    {% if request.status == 'pending' %}
+                        <span class="badge badge-warning">Pending</span>
+                    {% elif request.status == 'approved' %}
+                        <span class="badge badge-info">Approved</span>
+                    {% elif request.status == 'shipped' %}
+                        <span class="badge badge-success">Shipped</span>
+                    {% elif request.status == 'rejected' %}
+                        <span class="badge badge-danger">Rejected</span>
+                    {% endif %}
+                </td>
+                <td>{{ request.created_at|datetime }}</td>
+                <td>{{ request.notes or 'N/A' }}</td>
+                <td>
+                    {% if request.status == 'pending' %}
+                        <button class="btn btn-sm btn-success" onclick="openApproveModal('{{ request.id }}')">Approve</button>
+                        <button class="btn btn-sm btn-danger" onclick="openRejectModal('{{ request.id }}')">Reject</button>
+                    {% elif request.status == 'approved' %}
+                        <a href="{{ url_for('supplier_shipments') }}" class="btn btn-sm btn-info">View Shipment</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Approve Modal -->
+<div id="approveModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleModal('approveModal')">&times;</span>
+        <h3>Approve Restock Request</h3>
+        <form method="POST" id="approveForm">
+            <div class="form-group">
+                <label for="tracking_number">Tracking Number</label>
+                <input type="text" id="tracking_number" name="tracking_number" placeholder="Optional">
+            </div>
+            <div class="form-group">
+                <label for="expected_delivery_date">Expected Delivery Date</label>
+                <input type="date" id="expected_delivery_date" name="expected_delivery_date">
+            </div>
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Approve & Create Shipment</button>
+        </form>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleModal('rejectModal')">&times;</span>
+        <h3>Reject Restock Request</h3>
+        <form method="POST" id="rejectForm">
+            <div class="form-group">
+                <label for="rejection_reason">Rejection Reason</label>
+                <textarea id="rejection_reason" name="rejection_reason" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-danger">Reject Request</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openApproveModal(requestId) {
+    document.getElementById('approveForm').action = `/supplier/restock-requests/${requestId}/approve`;
+    toggleModal('approveModal');
+}
+
+function openRejectModal(requestId) {
+    document.getElementById('rejectForm').action = `/supplier/restock-requests/${requestId}/reject`;
+    toggleModal('rejectModal');
+}
+</script>
+{% endblock %}

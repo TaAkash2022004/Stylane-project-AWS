@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Supplier Dashboard - StyleLane{% endblock %}
+
+{% block nav_links %}
+    <a href="{{ url_for('supplier_dashboard') }}" class="nav-link active">Dashboard</a>
+    <a href="{{ url_for('supplier_restock_requests') }}" class="nav-link">Restock Requests</a>
+    <a href="{{ url_for('supplier_shipments') }}" class="nav-link">Shipments</a>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h2>Supplier Dashboard</h2>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-info">
+                <h3>{{ pending_requests }}</h3>
+                <p>Pending Requests</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+                <h3>{{ approved_requests }}</h3>
+                <p>Approved Requests</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">🚚</div>
+            <div class="stat-info">
+                <h3>{{ shipments }}</h3>
+                <p>Total Shipments</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-sections">
+        <div class="dashboard-section">
+            <h3>Recent Restock Requests</h3>
+            {% if recent_requests %}
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Request ID</th>
+                                <th>Store</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in recent_requests %}
+                            <tr>
+                                <td>{{ request.id }}</td>
+                                <td>{{ request.store.name if request.store else 'N/A' }}</td>
+                                <td>{{ request.product.name if request.product else 'N/A' }}</td>
+                                <td>{{ request.requested_quantity }}</td>
+                                <td>
+                                    {% if request.status == 'pending' %}
+                                        <span class="badge badge-warning">Pending</span>
+                                    {% elif request.status == 'approved' %}
+                                        <span class="badge badge-info">Approved</span>
+                                    {% elif request.status == 'shipped' %}
+                                        <span class="badge badge-success">Shipped</span>
+                                    {% elif request.status == 'rejected' %}
+                                        <span class="badge badge-danger">Rejected</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ request.created_at|datetime }}</td>
+                                <td>
+                                    {% if request.status == 'pending' %}
+                                        <a href="{{ url_for('supplier_restock_requests') }}?request_id={{ request.id }}" class="btn btn-sm btn-primary">View</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="no-data">No recent requests.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

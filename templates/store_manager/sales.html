@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Sales - StyleLane{% endblock %}
+
+{% block nav_links %}
+    <a href="{{ url_for('store_manager_dashboard') }}" class="nav-link">Dashboard</a>
+    <a href="{{ url_for('store_manager_products') }}" class="nav-link">Products</a>
+    <a href="{{ url_for('store_manager_sales') }}" class="nav-link active">Sales</a>
+    <a href="{{ url_for('store_manager_restock_requests') }}" class="nav-link">Restock Requests</a>
+    <a href="{{ url_for('store_manager_reports') }}" class="nav-link">Reports</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Sales - {{ store.name }}</h2>
+    <button class="btn btn-primary" onclick="toggleModal('createSaleModal')">Record Sale</button>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Total Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sale in sales %}
+            <tr>
+                <td>{{ sale.sale_date|datetime }}</td>
+                <td>{{ sale.product.name if sale.product else 'N/A' }}</td>
+                <td>{{ sale.product.sku if sale.product else 'N/A' }}</td>
+                <td>{{ sale.quantity }}</td>
+                <td>${{ "%.2f"|format(sale.unit_price) }}</td>
+                <td>${{ "%.2f"|format(sale.total_amount) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Create Sale Modal -->
+<div id="createSaleModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleModal('createSaleModal')">&times;</span>
+        <h3>Record Sale</h3>
+        <form method="POST" action="{{ url_for('store_manager_create_sale') }}">
+            <div class="form-group">
+                <label for="product_id">Product</label>
+                <select id="product_id" name="product_id" required onchange="updateSaleInfo()">
+                    <option value="">Select Product</option>
+                    {% for product in products %}
+                    <option value="{{ product.id }}" data-price="{{ product.price }}" data-stock="{{ product.stock_quantity }}">{{ product.name }} (SKU: {{ product.sku }}) - Stock: {{ product.stock_quantity }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="quantity">Quantity</label>
+                <input type="number" id="quantity" name="quantity" min="1" required onchange="updateSaleInfo()">
+                <small id="stockInfo" class="form-text"></small>
+            </div>
+            <div class="form-group">
+                <label>Total Amount</label>
+                <div id="totalAmount" class="total-display">$0.00</div>
+            </div>
+            <button type="submit" class="btn btn-primary">Record Sale</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function updateSaleInfo() {
+    const productSelect = document.getElementById('product_id');
+    const quantityInput = document.getElementById('quantity');
+    const stockInfo = document.getElementById('stockInfo');
+    const totalAmount = document.getElementById('totalAmount');
+    
+    if (productSelect.value) {
+        const option = productSelect.options[productSelect.selectedIndex];
+        const price = parseFloat(option.dataset.price);
+        const stock = parseInt(option.dataset.stock);
+        const quantity = parseInt(quantityInput.value) || 0;
+        
+        stockInfo.textContent = `Available stock: ${stock}`;
+        totalAmount.textContent = `$${(price * quantity).toFixed(2)}`;
+        
+        if (quantity > stock) {
+            stockInfo.style.color = 'red';
+            stockInfo.textContent += ' - Insufficient stock!';
+        } else {
+            stockInfo.style.color = '';
+        }
+    } else {
+        stockInfo.textContent = '';
+        totalAmount.textContent = '$0.00';
+    }
+}
+</script>
+{% endblock %}

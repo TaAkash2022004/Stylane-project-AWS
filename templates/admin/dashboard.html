@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - StyleLane{% endblock %}
+
+{% block nav_links %}
+<a href="{{ url_for('admin_dashboard') }}" class="nav-link active">Dashboard</a>
+<a href="{{ url_for('admin_users') }}" class="nav-link">Users</a>
+<a href="{{ url_for('admin_stores') }}" class="nav-link">Stores</a>
+<a href="{{ url_for('admin_inventory') }}" class="nav-link">Inventory</a>
+<a href="{{ url_for('admin_reports') }}" class="nav-link">Reports</a>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h2>Admin Dashboard</h2>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">🏪</div>
+            <div class="stat-info">
+                <h3>{{ total_stores }}</h3>
+                <p>Total Stores</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">📦</div>
+            <div class="stat-info">
+                <h3>{{ total_products }}</h3>
+                <p>Total Products</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+                <h3>{{ total_users }}</h3>
+                <p>Total Users</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-info">
+                <h3>{{ pending_requests }}</h3>
+                <p>Pending Requests</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-sections">
+        <div class="dashboard-section">
+            <h3>Low Stock Alerts</h3>
+            {% if low_stock_products %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>SKU</th>
+                            <th>Store</th>
+                            <th>Stock</th>
+                            <th>Threshold</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in low_stock_products[:10] %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.sku }}</td>
+                            <td>{{ product.store.name if product.store else 'N/A' }}</td>
+                            <td>{{ product.stock_quantity }}</td>
+                            <td>{{ product.low_stock_threshold }}</td>
+                            <td><span class="badge badge-warning">Low Stock</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="no-data">No low stock products at this time.</p>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-section">
+            <h3>Recent Sales</h3>
+            {% if recent_sales %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Store</th>
+                            <th>Quantity</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in recent_sales %}
+                        <tr>
+                            <td>{{ sale.product.name if sale.product else 'N/A' }}</td>
+                            <td>{{ sale.store.name if sale.store else 'N/A' }}</td>
+                            <td>{{ sale.quantity }}</td>
+                            <td>${{ "%.2f"|format(sale.total_amount) }}</td>
+                            <td>{{ sale.sale_date|datetime }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="no-data">No recent sales.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Sales Trend Chart
+    const salesCtx = document.getElementById('salesTrendChart').getContext('2d');
+    new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: {{ sales_dates| tojson }},
+        datasets: [{
+            label: 'Sales (Last 7 Days)',
+            data: {{ sales_values| tojson }},
+        borderColor: '#6366f1',
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        tension: 0.4,
+        fill: true
+            }]
+        },
+        options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Sales Trend'
+            }
+        }
+    }
+    });
+
+    // Category Chart
+    const categoryCtx = document.getElementById('salesCategoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ category_labels| tojson }},
+        datasets: [{
+            data: {{ category_data| tojson }},
+        backgroundColor: [
+            '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e',
+            '#f59e0b', '#10b981', '#3b82f6', '#6b7280'
+        ]
+            }]
+        },
+        options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Sales by Category'
+            }
+        }
+    }
+    });
+</script>
+{% endblock %}

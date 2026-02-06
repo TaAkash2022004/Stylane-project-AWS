@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Restock Requests - StyleLane{% endblock %}
+
+{% block nav_links %}
+    <a href="{{ url_for('store_manager_dashboard') }}" class="nav-link">Dashboard</a>
+    <a href="{{ url_for('store_manager_products') }}" class="nav-link">Products</a>
+    <a href="{{ url_for('store_manager_sales') }}" class="nav-link">Sales</a>
+    <a href="{{ url_for('store_manager_restock_requests') }}" class="nav-link active">Restock Requests</a>
+    <a href="{{ url_for('store_manager_reports') }}" class="nav-link">Reports</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Restock Requests - {{ store.name }}</h2>
+    <button class="btn btn-primary" onclick="toggleModal('createRequestModal')">Create Restock Request</button>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Request ID</th>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Requested Quantity</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in requests %}
+            <tr>
+                <td>{{ request.id }}</td>
+                <td>{{ request.product.name if request.product else 'N/A' }}</td>
+                <td>{{ request.product.sku if request.product else 'N/A' }}</td>
+                <td>{{ request.requested_quantity }}</td>
+                <td>
+                    {% if request.status == 'pending' %}
+                        <span class="badge badge-warning">Pending</span>
+                    {% elif request.status == 'approved' %}
+                        <span class="badge badge-info">Approved</span>
+                    {% elif request.status == 'shipped' %}
+                        <span class="badge badge-success">Shipped</span>
+                    {% elif request.status == 'rejected' %}
+                        <span class="badge badge-danger">Rejected</span>
+                    {% endif %}
+                </td>
+                <td>{{ request.created_at|datetime }}</td>
+                <td>{{ request.notes or 'N/A' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Create Request Modal -->
+<div id="createRequestModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleModal('createRequestModal')">&times;</span>
+        <h3>Create Restock Request</h3>
+        <form method="POST" action="{{ url_for('store_manager_create_restock_request') }}">
+            <div class="form-group">
+                <label for="product_id">Product</label>
+                <select id="product_id" name="product_id" required>
+                    <option value="">Select Product</option>
+                    {% for product in products %}
+                    <option value="{{ product.id }}">{{ product.name }} (SKU: {{ product.sku }}) - Current Stock: {{ product.stock_quantity }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="quantity">Requested Quantity</label>
+                <input type="number" id="quantity" name="quantity" min="1" required>
+            </div>
+            <div class="form-group">
+                <label for="notes">Notes (Optional)</label>
+                <textarea id="notes" name="notes"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Request</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
