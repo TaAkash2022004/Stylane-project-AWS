@@ -51,7 +51,7 @@ restock_requests_table = dynamodb.Table('StyleLaneRestockRequests')
 shipments_table = dynamodb.Table('StyleLaneShipments')
 
 # SNS Topic ARN (Set this in environment variables during deployment)
-SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN') 
+SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:897722702935:Stylane_project"
 
 # Helper Functions
 def send_notification(subject, message):
